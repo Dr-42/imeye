@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
     // Focus the window
     glfwRequestWindowAttention(window);
     
-    #ifdef __WIN64
+    #if defined(__WIN64) || defined(__WIN32)
     FreeConsole();
     #endif
 

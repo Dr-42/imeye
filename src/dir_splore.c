@@ -61,7 +61,11 @@ char** list_images(const char* filepath) {
 				strcmp(name + len - 4, ".SVG") == 0) {
 				images[i] = malloc(strlen(directory) + strlen(name) + 2);
 				strcpy(images[i], directory);
-				strcat(images[i], "/");
+				#if defined(_WIN32) || defined(_WIN64)
+					strcat(images[i], "\\");
+				#else
+					strcat(images[i], "/");
+				#endif
 				strcat(images[i], name);
 				i++;
 			}
