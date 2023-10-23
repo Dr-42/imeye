@@ -4,28 +4,28 @@
 #include <stdio.h>
 
 const char* vert_shad = 
-				"#version 330 core\n"
-				"layout (location = 0) in vec3 vertex;\n"
-				"layout (location = 1) in vec2 texCoord;\n"
-				"out vec2 TexCoords;\n"
-				"void main()\n"
-				"{\n"
-					"TexCoords = texCoord;\n"
-					"gl_Position = vec4(vertex, 1.0);\n"
-				"}";
+	"#version 330 core\n"
+	"layout (location = 0) in vec3 vertex;\n"
+	"layout (location = 1) in vec2 texCoord;\n"
+	"out vec2 TexCoords;\n"
+	"void main()\n"
+	"{\n"
+	"TexCoords = texCoord;\n"
+	"gl_Position = vec4(vertex, 1.0);\n"
+"}";
 
 const char* frag_shad =
-				"#version 330 core\n"
-				"in vec2 TexCoords;\n"
-				"out vec4 color;\n"
-				"uniform sampler2D image;\n"
-				"void main()\n"
-				"{   \n"
-					"vec4 texColor = texture(image, TexCoords);\n"
-					"if (texColor.a < 0.1)\n"
-						"discard;\n"
-					"color = texColor;\n"
-				"}";
+	"#version 330 core\n"
+	"in vec2 TexCoords;\n"
+	"out vec4 color;\n"
+	"uniform sampler2D image;\n"
+	"void main()\n"
+	"{   \n"
+	"vec4 texColor = texture(image, TexCoords);\n"
+	"if (texColor.a < 0.1)\n"
+	"discard;\n"
+	"color = texColor;\n"
+"}";
 
 
 uint32_t get_shader(){

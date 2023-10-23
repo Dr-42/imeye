@@ -1,0 +1,11 @@
+[build]
+compiler = "clang"
+
+[[targets]]
+name = "main"
+src = "./src/"
+include_dir = "./src/include/"
+type = "exe"
+cflags = " -g -Wall -Wextra"
+libs = "-lm -lGLEW -lglfw -lGL"
+deps = [""]
