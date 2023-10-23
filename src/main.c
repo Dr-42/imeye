@@ -274,6 +274,9 @@ int main(int argc, char** argv) {
 
         // Next image
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+            if (num_images == 0 || num_images == 1) {
+                continue;
+            }
             image_index++;
             if (image_index >= num_images) {
                 image_index = 0;
@@ -302,6 +305,9 @@ int main(int argc, char** argv) {
 
         // Previous image
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+            if (num_images == 0 || num_images == 1) {
+                continue;
+            }
             if (image_index == 0) {
                 image_index = num_images - 1;
             } else {
