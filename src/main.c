@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -8,6 +9,7 @@
 #include "image.h"
 
 #define MARGIN 100
+#define FPS 60
 
 float vertices[20] = {
     // Position		    //Tex coords
@@ -22,12 +24,27 @@ unsigned int indices[6] = {
     1, 3, 2
 };
 int32_t o_width = 0, o_height = 0;
+int32_t v_x = 0, v_y = 0;
+int8_t scroll = 0;
 
 void glfw_resize_callback(GLFWwindow* window, int width, int height) {
     (void)window;
     // Maintain the original size. 
     // Keep the image in the center of the screen.
-    glViewport((width - o_width) / 2, (height - o_height) / 2, o_width, o_height);
+    v_x = (width - o_width) / 2;
+    v_y = (height - o_height) / 2;
+    glViewport(v_x, v_y, o_width, o_height);
+}
+
+void glfw_scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    (void)window;
+    (void)xoffset;
+    // Zoom
+    if (yoffset > 0) {
+        scroll = 1;
+    } else if (yoffset < 0) {
+        scroll = -1;
+    }
 }
 
 int main(int argc, char** argv) {
@@ -139,7 +156,9 @@ int main(int argc, char** argv) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 
     glfwSetFramebufferSizeCallback(window, glfw_resize_callback);
+    glfwSetScrollCallback(window, glfw_scroll_callback);
 
+    float time_start = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -150,6 +169,58 @@ int main(int argc, char** argv) {
 
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             glfwSetWindowShouldClose(window, GL_TRUE);
+        }
+
+        float l_scale = 1.0f;
+        // Zoom
+        if ((glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) || scroll == 1) {
+            l_scale += 0.01f;
+            int prev_width = o_width;
+            int prev_height = o_height;
+            o_width *= l_scale;
+            o_height *= l_scale;
+            v_x -= (o_width - prev_width) / 2;
+            v_y -= (o_height - prev_height) / 2;
+            glViewport(v_x, v_y, o_width, o_height);
+        }
+
+        if ((glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) || scroll == -1) {
+            l_scale -= 0.01f;
+            int prev_width = o_width;
+            int prev_height = o_height;
+            o_width *= l_scale;
+            o_height *= l_scale;
+            v_x -= (o_width - prev_width) / 2;
+            v_y -= (o_height - prev_height) / 2;
+            glViewport(v_x,v_y, o_width, o_height);
+        }
+        // Move
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            v_x += 1;
+            glViewport(v_x, v_y, o_width, o_height);
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+            v_x -= 1;
+            glViewport(v_x, v_y, o_width, o_height);
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            v_y += 1;
+            glViewport(v_x, v_y, o_width, o_height);
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            v_y -= 1;
+            glViewport(v_x, v_y, o_width, o_height);
+        }
+
+        scroll = 0;
+
+        float time_end = glfwGetTime();
+        float time_diff = time_end - time_start;
+        if (time_diff < 1.0f / FPS) {
+            usleep((1.0f / FPS - time_diff) * 1000000);
         }
     }
 
