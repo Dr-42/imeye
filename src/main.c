@@ -7,6 +7,8 @@
 #include "shader.h"
 #include "image.h"
 
+#define MARGIN 100
+
 float vertices[20] = {
     // Position		    //Tex coords
      1.0f,  1.0f, -1.0f,    1.0f, 1.0f,
@@ -19,10 +21,13 @@ unsigned int indices[6] = {
     0, 3, 1,
     1, 3, 2
 };
+int32_t o_width = 0, o_height = 0;
 
 void glfw_resize_callback(GLFWwindow* window, int width, int height) {
     (void)window;
-    glViewport(0, 0, width, height);
+    // Maintain the original size. 
+    // Keep the image in the center of the screen.
+    glViewport((width - o_width) / 2, (height - o_height) / 2, o_width, o_height);
 }
 
 int main(int argc, char** argv) {
@@ -42,23 +47,22 @@ int main(int argc, char** argv) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    int32_t width = 0, height = 0;
-    uint32_t texture = get_image(filename, &width, &height);
+    uint32_t texture = get_image(filename, &o_width, &o_height);
 
-    if (width == 0 || height == 0) {
+    if (o_width == 0 || o_height == 0) {
         fprintf(stderr, "Failed to load image: %s\n", filename);
         return -1;
     }
 
-    fprintf(stdout, "Image size: %dx%d\n", width, height);
+    fprintf(stdout, "Image size: %dx%d\n", o_width, o_height);
 
     int32_t display_width = 0, display_height = 0;
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     if (monitor) {
         const GLFWvidmode* mode = glfwGetVideoMode(monitor);
         if (mode) {
-            display_width = mode->width;
-            display_height = mode->height;
+            display_width = mode->width - MARGIN;
+            display_height = mode->height - MARGIN;
         }
     }
 
@@ -70,21 +74,21 @@ int main(int argc, char** argv) {
     // Scale the image to fit the display
     float scale = 1.0f;
 
-    if (width > display_width) {
-        scale = (float)display_width / (float)width;
+    if (o_width > display_width) {
+        scale = (float)display_width / (float)o_width;
     }
     
-    if (height > display_height) {
-        float height_scale = (float)display_height / (float)height;
+    if (o_height > display_height) {
+        float height_scale = (float)display_height / (float)o_height;
         if (height_scale < scale) {
             scale = height_scale;
         }
     }
 
-    width *= scale;
-    height *= scale;
+    o_width *= scale;
+    o_height *= scale;
 
-    GLFWwindow* window = glfwCreateWindow(width, height, "Image Viewer", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(o_width, o_height, "Image Viewer", NULL, NULL);
     if (!window) {
         glfwTerminate();
         return -1;
@@ -121,7 +125,8 @@ int main(int argc, char** argv) {
     glVertexAttribPointer(tex_attrib, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void*)(sizeof(float) * 3));
     glEnableVertexAttribArray(tex_attrib);
 
-    texture = get_image(filename, &width, &height);
+    int w, h;
+    texture = get_image(filename, &w, &h);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
