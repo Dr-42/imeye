@@ -1,6 +1,8 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -10,7 +12,7 @@
 #include "dir_splore.h"
 
 #define MARGIN 100
-#define FPS 60
+#define FPS 10
 
 float vertices[20] = {
     // Position		    //Tex coords
@@ -28,6 +30,7 @@ int32_t o_width = 0, o_height = 0;
 int32_t v_x = 0, v_y = 0;
 int8_t scroll = 0;
 size_t image_index = 0;
+bool fullscreen = false;
 
 void glfw_resize_callback(GLFWwindow* window, int width, int height) {
     (void)window;
@@ -106,8 +109,9 @@ int main(int argc, char** argv) {
 
     o_width *= scale;
     o_height *= scale;
-
-    GLFWwindow* window = glfwCreateWindow(o_width, o_height, "Image Viewer", NULL, NULL);
+    char* title = malloc(sizeof(char) * (strlen(filename) + sizeof("imeye - ")));
+    sprintf(title, "imeye - %s", filename);
+    GLFWwindow* window = glfwCreateWindow(o_width, o_height, title, NULL, NULL);
     if (!window) {
         glfwTerminate();
         return -1;
@@ -199,7 +203,6 @@ int main(int argc, char** argv) {
             v_x -= (o_width - prev_width) / 2;
             v_y -= (o_height - prev_height) / 2;
             glViewport(v_x, v_y, o_width, o_height);
-            scale *= l_scale;
         }
 
         if ((glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) || scroll == -1) {
@@ -211,7 +214,6 @@ int main(int argc, char** argv) {
             v_x -= (o_width - prev_width) / 2;
             v_y -= (o_height - prev_height) / 2;
             glViewport(v_x,v_y, o_width, o_height);
-            scale *= l_scale;
         }
         // Move
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
@@ -234,29 +236,73 @@ int main(int argc, char** argv) {
             glViewport(v_x, v_y, o_width, o_height);
         }
 
+        // Fullscreen
+        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+            if(!fullscreen){
+                glfwSetWindowMonitor(window, monitor, 0, 0, display_width, display_height, GLFW_DONT_CARE);
+            } else {
+                glfwSetWindowMonitor(window, NULL, 0, 0, o_width, o_height, GLFW_DONT_CARE);
+                glfwSetWindowPos(window, 100, 100);
+            }
+            fullscreen = !fullscreen;
+            usleep(100000);
+        }
+
         // Next image
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
             image_index++;
             if (image_index >= num_images) {
                 image_index = 0;
             }
-            o_width *= scale;
-            o_height *= scale;
+            uint32_t prev_width = o_width;
+            uint32_t prev_height = o_height;
             texture = get_image(images[image_index], &o_width, &o_height);
+            // Scale the image to maintain aspect ratio and the scale of previous image
+            float width_scale = (float)prev_width / (float)o_width;
+            float height_scale = (float)prev_height / (float)o_height;
+
+            if (width_scale < height_scale) {
+                o_width *= width_scale;
+                o_height *= width_scale;
+            } else {
+                o_width *= height_scale;
+                o_height *= height_scale;
+            }
             glViewport(v_x, v_y, o_width, o_height);
+            free(title);
+            title = malloc(sizeof(char) * (strlen(images[image_index]) + sizeof("imeye - ")));
+            sprintf(title, "imeye - %s", images[image_index]);
+            glfwSetWindowTitle(window, title);
+            usleep(100000);
         }
 
         // Previous image
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
             if (image_index == 0) {
-                image_index = num_images;
+                image_index = num_images - 1;
             } else {
                 image_index--;
             }
+            uint32_t prev_width = o_width;
+            uint32_t prev_height = o_height;
             texture = get_image(images[image_index], &o_width, &o_height);
-            o_width *= scale;
-            o_height *= scale;
+            // Scale the image to maintain aspect ratio and the scale of previous image
+            float width_scale = (float)prev_width / (float)o_width;
+            float height_scale = (float)prev_height / (float)o_height;
+
+            if (width_scale < height_scale) {
+                o_width *= width_scale;
+                o_height *= width_scale;
+            } else {
+                o_width *= height_scale;
+                o_height *= height_scale;
+            }
             glViewport(v_x, v_y, o_width, o_height);
+            free(title);
+            title = malloc(sizeof(char) * (strlen(images[image_index]) + sizeof("imeye - ")));
+            sprintf(title, "imeye - %s", images[image_index]);
+            glfwSetWindowTitle(window, title);
+            usleep(100000);
         }
 
         scroll = 0;
@@ -269,5 +315,6 @@ int main(int argc, char** argv) {
     }
 
     glfwTerminate();
+    free(title);
     return 0;
 }
