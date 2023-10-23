@@ -6,10 +6,16 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <stb/stb_image.h>
+
+#ifdef __WIN64
+#include <windows.h>
+#endif
 
 #include "shader.h"
 #include "image.h"
 #include "dir_splore.h"
+#include "icon.h"
 
 #define MARGIN 100
 #define FPS 10
@@ -117,7 +123,25 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+    stbi_set_flip_vertically_on_load(false);
+    GLFWimage icon;
+    icon.width = icon_width;
+    icon.height = icon_height;
+    icon.pixels = icon_pixels;
+
+    glfwSetWindowIcon(window, 1, &icon);
+    stbi_set_flip_vertically_on_load(true);
+
     glfwMakeContextCurrent(window);
+    
+    // Focus the window
+    glfwRequestWindowAttention(window);
+    
+    #ifdef __WIN64
+    FreeConsole();
+    #endif
+
+
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK) {
         return -1;
