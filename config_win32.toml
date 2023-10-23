@@ -2,7 +2,7 @@
 compiler = "clang"
 
 [[targets]]
-name = "main"
+name = "imeye"
 src = "./src/"
 include_dir = "./src/include/"
 type = "exe"

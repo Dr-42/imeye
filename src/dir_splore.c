@@ -51,7 +51,14 @@ char** list_images(const char* filepath) {
 				strcmp(name + len - 4, ".bmp") == 0 ||
 				strcmp(name + len - 4, ".gif") == 0 ||
 				strcmp(name + len - 4, ".tga") == 0 ||
-				strcmp(name + len - 4, ".svg") == 0) {
+				strcmp(name + len - 4, ".svg") == 0 ||
+				strcmp(name + len - 4, ".PNG") == 0 ||
+				strcmp(name + len - 4, ".JPG") == 0 ||
+				strcmp(name + len - 5, ".JPEg") == 0 ||
+				strcmp(name + len - 4, ".BMP") == 0 ||
+				strcmp(name + len - 4, ".GIF") == 0 ||
+				strcmp(name + len - 4, ".TGA") == 0 ||
+				strcmp(name + len - 4, ".SVG") == 0) {
 				images[i] = malloc(strlen(directory) + strlen(name) + 2);
 				strcpy(images[i], directory);
 				strcat(images[i], "/");
