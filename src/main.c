@@ -20,6 +20,11 @@ unsigned int indices[6] = {
     1, 3, 2
 };
 
+void glfw_resize_callback(GLFWwindow* window, int width, int height) {
+    (void)window;
+    glViewport(0, 0, width, height);
+}
+
 int main(int argc, char** argv) {
     const char* filename;
     if (argc != 2) {
@@ -37,7 +42,49 @@ int main(int argc, char** argv) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Image Viewer", NULL, NULL);
+    int32_t width = 0, height = 0;
+    uint32_t texture = get_image(filename, &width, &height);
+
+    if (width == 0 || height == 0) {
+        fprintf(stderr, "Failed to load image: %s\n", filename);
+        return -1;
+    }
+
+    fprintf(stdout, "Image size: %dx%d\n", width, height);
+
+    int32_t display_width = 0, display_height = 0;
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    if (monitor) {
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        if (mode) {
+            display_width = mode->width;
+            display_height = mode->height;
+        }
+    }
+
+    if (display_width == 0 || display_height == 0) {
+        fprintf(stderr, "Failed to get display size\n");
+        return -1;
+    }
+
+    // Scale the image to fit the display
+    float scale = 1.0f;
+
+    if (width > display_width) {
+        scale = (float)display_width / (float)width;
+    }
+    
+    if (height > display_height) {
+        float height_scale = (float)display_height / (float)height;
+        if (height_scale < scale) {
+            scale = height_scale;
+        }
+    }
+
+    width *= scale;
+    height *= scale;
+
+    GLFWwindow* window = glfwCreateWindow(width, height, "Image Viewer", NULL, NULL);
     if (!window) {
         glfwTerminate();
         return -1;
@@ -74,7 +121,7 @@ int main(int argc, char** argv) {
     glVertexAttribPointer(tex_attrib, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void*)(sizeof(float) * 3));
     glEnableVertexAttribArray(tex_attrib);
 
-    uint32_t texture = get_image(filename);
+    texture = get_image(filename, &width, &height);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -85,6 +132,8 @@ int main(int argc, char** argv) {
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+
+    glfwSetFramebufferSizeCallback(window, glfw_resize_callback);
 
     while (!glfwWindowShouldClose(window)) {
         glfwSwapBuffers(window);
