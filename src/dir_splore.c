@@ -16,6 +16,12 @@ char* parent_directory(const char* filepath) {
 		}
 	}
 
+	if (last_slash == 0) {
+		char* dot = malloc(2);
+		dot[0] = '.'; dot[1] = '\0';
+		return dot;
+	}
+
 	char* parent = malloc(last_slash + 1);
 	memcpy(parent, filepath, last_slash);
 	parent[last_slash] = '\0';
