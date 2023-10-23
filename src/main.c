@@ -7,6 +7,7 @@
 
 #include "shader.h"
 #include "image.h"
+#include "dir_splore.h"
 
 #define MARGIN 100
 #define FPS 60
@@ -26,6 +27,7 @@ unsigned int indices[6] = {
 int32_t o_width = 0, o_height = 0;
 int32_t v_x = 0, v_y = 0;
 int8_t scroll = 0;
+size_t image_index = 0;
 
 void glfw_resize_callback(GLFWwindow* window, int width, int height) {
     (void)window;
@@ -158,6 +160,21 @@ int main(int argc, char** argv) {
     glfwSetFramebufferSizeCallback(window, glfw_resize_callback);
     glfwSetScrollCallback(window, glfw_scroll_callback);
 
+    char** images = list_images(filename);
+
+    if (images == NULL) {
+        fprintf(stderr, "Failed to list images\n");
+        return -1;
+    }
+
+    size_t num_images = 0;
+    for (size_t i = 0; images[i] != NULL; i++) {
+        num_images++;
+        if(strcmp(images[i], filename) == 0) {
+            image_index = i;
+        }
+    }
+
     float time_start = glfwGetTime();
     while (!glfwWindowShouldClose(window)) {
         glfwSwapBuffers(window);
@@ -182,6 +199,7 @@ int main(int argc, char** argv) {
             v_x -= (o_width - prev_width) / 2;
             v_y -= (o_height - prev_height) / 2;
             glViewport(v_x, v_y, o_width, o_height);
+            scale *= l_scale;
         }
 
         if ((glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) || scroll == -1) {
@@ -193,6 +211,7 @@ int main(int argc, char** argv) {
             v_x -= (o_width - prev_width) / 2;
             v_y -= (o_height - prev_height) / 2;
             glViewport(v_x,v_y, o_width, o_height);
+            scale *= l_scale;
         }
         // Move
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
@@ -212,6 +231,31 @@ int main(int argc, char** argv) {
 
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
             v_y -= 1;
+            glViewport(v_x, v_y, o_width, o_height);
+        }
+
+        // Next image
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+            image_index++;
+            if (image_index >= num_images) {
+                image_index = 0;
+            }
+            o_width *= scale;
+            o_height *= scale;
+            texture = get_image(images[image_index], &o_width, &o_height);
+            glViewport(v_x, v_y, o_width, o_height);
+        }
+
+        // Previous image
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+            if (image_index == 0) {
+                image_index = num_images;
+            } else {
+                image_index--;
+            }
+            texture = get_image(images[image_index], &o_width, &o_height);
+            o_width *= scale;
+            o_height *= scale;
             glViewport(v_x, v_y, o_width, o_height);
         }
 
