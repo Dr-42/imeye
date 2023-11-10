@@ -87,6 +87,11 @@ void switch_image(control_t control, app_data_t* app_data, GLFWwindow* window){
 	float new_scale = get_scale(prev_width, prev_height, app_data->im_width, app_data->im_height);
 	app_data->im_width *= new_scale;
 	app_data->im_height *= new_scale;
+	// Center the image
+	int32_t prev_center_x = app_data->v_x + prev_width / 2;
+	int32_t	prev_center_y = app_data->v_y + prev_height / 2;
+	app_data->v_x = prev_center_x - app_data->im_width / 2;
+	app_data->v_y = prev_center_y - app_data->im_height / 2;
 	glViewport(app_data->v_x, app_data->v_y, app_data->im_width, app_data->im_height);
 	free(app_data->title);
 	app_data->title = malloc(sizeof(char) * (strlen(app_data->image_paths[app_data->image_index]) + sizeof("imeye - ")));
