@@ -1,4 +1,3 @@
-#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,6 +16,7 @@
 #include "image.h"
 #include "dir_splore.h"
 #include "icon.h"
+#include "controls.h"
 
 #define MARGIN 100
 #define FPS 10
@@ -34,25 +34,7 @@ unsigned int indices[6] = {
     1, 3, 2
 };
 
-typedef struct app_data_t {
-    uint32_t texture;
-    int32_t im_width;
-    int32_t im_height;
-    int32_t v_x;
-    int32_t v_y;
-    int8_t scroll;
-    size_t image_index;
-    bool fullscreen;
-} app_data_t;
-
 app_data_t app_data = {0};
-
-float get_scale(uint32_t prev_width, uint32_t prev_height, uint32_t width, uint32_t height) {
-    float prev_ar = (float)prev_width * (float)prev_height;
-    float ar = (float)width * (float)height;
-    float scale = sqrtf(prev_ar) / sqrtf(ar);
-    return scale;
-}
 
 void glfw_resize_callback(GLFWwindow* window, int width, int height) {
     (void)window;
@@ -132,9 +114,9 @@ int main(int argc, char** argv) {
 
     app_data.im_width *= scale;
     app_data.im_height *= scale;
-    char* title = malloc(sizeof(char) * (strlen(filename) + sizeof("imeye - ")));
-    sprintf(title, "imeye - %s", filename);
-    GLFWwindow* window = glfwCreateWindow(app_data.im_width, app_data.im_height, title, NULL, NULL);
+    app_data.title = malloc(sizeof(char) * (strlen(filename) + sizeof("imeye - ")));
+    sprintf(app_data.title, "imeye - %s", filename);
+    GLFWwindow* window = glfwCreateWindow(app_data.im_width, app_data.im_height, app_data.title, NULL, NULL);
     if (!window) {
         glfwTerminate();
         return -1;
@@ -205,17 +187,16 @@ int main(int argc, char** argv) {
     glfwSetFramebufferSizeCallback(window, glfw_resize_callback);
     glfwSetScrollCallback(window, glfw_scroll_callback);
 
-    char** images = list_images(filename);
+    app_data.image_paths = list_images(filename);
 
-    if (images == NULL) {
-        fprintf(stderr, "Failed to list images\n");
+    if (app_data.image_paths == NULL) {
+        fprintf(stderr, "Failed to list app_data.image_paths\n");
         return -1;
     }
 
-    size_t num_images = 0;
-    for (size_t i = 0; images[i] != NULL; i++) {
-        num_images++;
-        if(strcmp(images[i], filename) == 0) {
+    for (size_t i = 0; app_data.image_paths[i] != NULL; i++) {
+        app_data.image_count++;
+        if(strcmp(app_data.image_paths[i], filename) == 0) {
             app_data.image_index = i;
         }
     }
@@ -233,109 +214,47 @@ int main(int argc, char** argv) {
             glfwSetWindowShouldClose(window, GL_TRUE);
         }
 
-        float l_scale = 1.0f;
+        app_data.scale = 1.0f;
         // Zoom
         if ((glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) || app_data.scroll == 1) {
-            l_scale += 0.01f;
-            int prev_width = app_data.im_width;
-            int prev_height = app_data.im_height;
-            app_data.im_width *= l_scale;
-            app_data.im_height *= l_scale;
-            app_data.v_x -= (app_data.im_width - prev_width) / 2;
-            app_data.v_y -= (app_data.im_height - prev_height) / 2;
-            glViewport(app_data.v_x, app_data.v_y, app_data.im_width, app_data.im_height);
+            zoom_(ZOOM_IN, &app_data);
         }
 
         if ((glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) || app_data.scroll == -1) {
-            l_scale -= 0.01f;
-            int prev_width = app_data.im_width;
-            int prev_height = app_data.im_height;
-            app_data.im_width *= l_scale;
-            app_data.im_height *= l_scale;
-            app_data.v_x -= (app_data.im_width - prev_width) / 2;
-            app_data.v_y -= (app_data.im_height - prev_height) / 2;
-            glViewport(app_data.v_x, app_data.v_y, app_data.im_width, app_data.im_height);
+            zoom_(ZOOM_OUT, &app_data);
         }
         // Move
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-            app_data.v_x += 1;
-            glViewport(app_data.v_x, app_data.v_y, app_data.im_width, app_data.im_height);
+            move(RIGHT, &app_data);
         }
 
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-            app_data.v_x -= 1;
-            glViewport(app_data.v_x, app_data.v_y, app_data.im_width, app_data.im_height);
+            move(LEFT, &app_data);
         }
 
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-            app_data.v_y += 1;
-            glViewport(app_data.v_x, app_data.v_y, app_data.im_width, app_data.im_height);
+            move(UP, &app_data);
         }
 
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-            app_data.v_y -= 1;
-            glViewport(app_data.v_x, app_data.v_y, app_data.im_width, app_data.im_height);
+            move(DOWN, &app_data);
         }
 
         // Fullscreen
         if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
-            if(!app_data.fullscreen){
-                glfwSetWindowMonitor(window, monitor, 0, 0, display_width, display_height, GLFW_DONT_CARE);
-            } else {
-                glfwSetWindowMonitor(window, NULL, 0, 0, app_data.im_width, app_data.im_height, GLFW_DONT_CARE);
-                glfwSetWindowPos(window, 100, 100);
-            }
-            app_data.fullscreen = !app_data.fullscreen;
+            fullscreen(&app_data, window, monitor);
             usleep(100000);
         }
 
         // Next image
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-            if (num_images == 0 || num_images == 1) {
-                continue;
-            }
-            app_data.image_index++;
-            if (app_data.image_index >= num_images) {
-                app_data.image_index = 0;
-            }
-            uint32_t prev_width = app_data.im_width;
-            uint32_t prev_height = app_data.im_height;
-            texture = get_image(images[app_data.image_index], &app_data.im_width, &app_data.im_height);
-            // Scale the image to maintain aspect ratio and the scale of previous image
-            float new_scale = get_scale(prev_width, prev_height, app_data.im_width, app_data.im_height);
-            app_data.im_width *= new_scale;
-            app_data.im_height *= new_scale;
-            glViewport(app_data.v_x, app_data.v_y, app_data.im_width, app_data.im_height);
-            free(title);
-            title = malloc(sizeof(char) * (strlen(images[app_data.image_index]) + sizeof("imeye - ")));
-            sprintf(title, "imeye - %s", images[app_data.image_index]);
-            glfwSetWindowTitle(window, title);
+            switch_image(NEXT, &app_data, window);
             usleep(100000);
         }
 
         // Previous image
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-            if (num_images == 0 || num_images == 1) {
-                continue;
-            }
-            if (app_data.image_index == 0) {
-                app_data.image_index = num_images - 1;
-            } else {
-                app_data.image_index--;
-            }
-            uint32_t prev_width = app_data.im_width;
-            uint32_t prev_height = app_data.im_height;
-            texture = get_image(images[app_data.image_index], &app_data.im_width, &app_data.im_height);
-            // Scale the image to maintain aspect ratio and the scale of previous image
-            float new_scale = get_scale(prev_width, prev_height, app_data.im_width, app_data.im_height);
-            app_data.im_width *= new_scale;
-            app_data.im_height *= new_scale;
-            glViewport(app_data.v_x, app_data.v_y, app_data.im_width, app_data.im_height);
-            free(title);
-            title = malloc(sizeof(char) * (strlen(images[app_data.image_index]) + sizeof("imeye - ")));
-            sprintf(title, "imeye - %s", images[app_data.image_index]);
-            glfwSetWindowTitle(window, title);
-            usleep(100000);
+            switch_image(PREVIOUS, &app_data, window);
         }
 
         app_data.scroll = 0;
@@ -348,6 +267,6 @@ int main(int argc, char** argv) {
     }
 
     glfwTerminate();
-    free(title);
+    free(app_data.title);
     return 0;
 }
