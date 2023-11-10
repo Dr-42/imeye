@@ -7,5 +7,5 @@ src = "./src/"
 include_dir = "./src/include/"
 type = "exe"
 cflags = " -O3 -Wall -Wextra"
-libs = " icon.res -lglew32 -lglfw3 -lopengl32 -lm"
+libs = "-lglew32 -lglfw3 -lopengl32 -lm"
 deps = [""]

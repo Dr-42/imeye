@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,6 +57,13 @@ void glfw_scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     } else if (yoffset < 0) {
         scroll = -1;
     }
+}
+
+float get_scale(uint32_t prev_width, uint32_t prev_height, uint32_t width, uint32_t height) {
+    float prev_ar = (float)prev_width * (float)prev_height;
+    float ar = (float)width * (float)height;
+    float scale = sqrtf(prev_ar) / sqrtf(ar);
+    return scale;
 }
 
 int main(int argc, char** argv) {
@@ -285,16 +293,9 @@ int main(int argc, char** argv) {
             uint32_t prev_height = o_height;
             texture = get_image(images[image_index], &o_width, &o_height);
             // Scale the image to maintain aspect ratio and the scale of previous image
-            float width_scale = (float)prev_width / (float)o_width;
-            float height_scale = (float)prev_height / (float)o_height;
-
-            if (width_scale < height_scale) {
-                o_width *= width_scale;
-                o_height *= width_scale;
-            } else {
-                o_width *= height_scale;
-                o_height *= height_scale;
-            }
+            float new_scale = get_scale(prev_width, prev_height, o_width, o_height);
+            o_width *= new_scale;
+            o_height *= new_scale;
             glViewport(v_x, v_y, o_width, o_height);
             free(title);
             title = malloc(sizeof(char) * (strlen(images[image_index]) + sizeof("imeye - ")));
@@ -317,16 +318,9 @@ int main(int argc, char** argv) {
             uint32_t prev_height = o_height;
             texture = get_image(images[image_index], &o_width, &o_height);
             // Scale the image to maintain aspect ratio and the scale of previous image
-            float width_scale = (float)prev_width / (float)o_width;
-            float height_scale = (float)prev_height / (float)o_height;
-
-            if (width_scale < height_scale) {
-                o_width *= width_scale;
-                o_height *= width_scale;
-            } else {
-                o_width *= height_scale;
-                o_height *= height_scale;
-            }
+            float new_scale = get_scale(prev_width, prev_height, o_width, o_height);
+            o_width *= new_scale;
+            o_height *= new_scale;
             glViewport(v_x, v_y, o_width, o_height);
             free(title);
             title = malloc(sizeof(char) * (strlen(images[image_index]) + sizeof("imeye - ")));
