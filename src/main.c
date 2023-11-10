@@ -255,6 +255,7 @@ int main(int argc, char** argv) {
         // Previous image
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
             switch_image(PREVIOUS, &app_data, window);
+            usleep(100000);
         }
 
         app_data.scroll = 0;
