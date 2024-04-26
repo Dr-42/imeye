@@ -25,18 +25,26 @@ uint32_t get_image(const char* filename, int32_t* width, int32_t* height){
 
 	GLenum format;
 	switch (channels) {
-		case 1:
+		case 1: {
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 			format = GL_RED;
-		break;
-		case 2:
+			break;
+		}
+		case 2: {
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 			format = GL_RG;
-		break;
-		case 3:
+			break;
+		}
+		case 3: {
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 			format = GL_RGB;
-		break;
-		case 4:
+			break;
+		}
+		case 4: {
+			glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 			format = GL_RGBA;
-		break;
+			break;
+		}
 		default:
 			printf("Unsupported number of channels: %d\n", channels);
 			return -1;
