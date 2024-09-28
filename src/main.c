@@ -24,22 +24,16 @@
 
 float vertices[20] = {
     // Position		    //Tex coords
-     1.0f,  1.0f, -1.0f,    1.0f, 1.0f,
-     1.0f, -1.0f, -1.0f,    1.0f, 0.0f,
-    -1.0f, -1.0f, -1.0f,    0.0f, 0.0f,
-    -1.0f,  1.0f, -1.0f,    0.0f, 1.0f
-};
+    1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 0.0f, -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 1.0f, -1.0f, 0.0f, 1.0f};
 
-unsigned int indices[6] = {
-    0, 3, 1,
-    1, 3, 2
-};
+unsigned int indices[6] = {0, 3, 1, 1, 3, 2};
 
 app_data_t app_data = {0};
+GLFWmonitor* monitor = NULL;
 
 void glfw_resize_callback(GLFWwindow* window, int width, int height) {
     (void)window;
-    // Maintain the original size. 
+    // Maintain the original size.
     // Keep the image in the center of the screen.
     app_data.v_x = (width - app_data.im_width) / 2;
     app_data.v_y = (height - app_data.im_height) / 2;
@@ -57,6 +51,58 @@ void glfw_scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     }
 }
 
+void glfw_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    (void)window;
+    (void)scancode;
+    (void)mods;
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, GL_TRUE);
+    }
+
+    app_data.scale = 1.0f;
+    // Zoom
+    if ((key == GLFW_KEY_UP && action == GLFW_PRESS) || app_data.scroll == 1) {
+        zoom_(ZOOM_IN, &app_data);
+    }
+
+    if ((key == GLFW_KEY_DOWN && action == GLFW_PRESS) || app_data.scroll == -1) {
+        zoom_(ZOOM_OUT, &app_data);
+    }
+    // Move
+    if (key == GLFW_KEY_D && action == GLFW_PRESS) {
+        move(RIGHT, &app_data);
+    }
+
+    if (key == GLFW_KEY_A && action == GLFW_PRESS) {
+        move(LEFT, &app_data);
+    }
+
+    if (key == GLFW_KEY_W && action == GLFW_PRESS) {
+        move(UP, &app_data);
+    }
+
+    if (key == GLFW_KEY_S && action == GLFW_PRESS) {
+        move(DOWN, &app_data);
+    }
+
+    // Fullscreen
+    if (key == GLFW_KEY_F && action == GLFW_PRESS) {
+        fullscreen(&app_data, window, monitor);
+        usleep(100000);
+    }
+
+    // Next image
+    if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
+        switch_image(NEXT, &app_data, window);
+        usleep(100000);
+    }
+
+    // Previous image
+    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) {
+        switch_image(PREVIOUS, &app_data, window);
+        usleep(100000);
+    }
+}
 
 int main(int argc, char** argv) {
     const char* filename;
@@ -85,13 +131,16 @@ int main(int argc, char** argv) {
     fprintf(stdout, "Image size: %dx%d\n", app_data.im_width, app_data.im_height);
 
     int32_t display_width = 0, display_height = 0;
-    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    monitor = glfwGetPrimaryMonitor();
     if (monitor) {
         const GLFWvidmode* mode = glfwGetVideoMode(monitor);
         if (mode) {
             display_width = mode->width - MARGIN;
             display_height = mode->height - MARGIN;
         }
+    } else {
+        fprintf(stderr, "Failed to get primary monitor\n");
+        return -1;
     }
 
     if (display_width == 0 || display_height == 0) {
@@ -105,7 +154,7 @@ int main(int argc, char** argv) {
     if (app_data.im_width > display_width) {
         scale = (float)display_width / (float)app_data.im_width;
     }
-    
+
     if (app_data.im_height > display_height) {
         float height_scale = (float)display_height / (float)app_data.im_height;
         if (height_scale < scale) {
@@ -133,14 +182,13 @@ int main(int argc, char** argv) {
     stbi_set_flip_vertically_on_load(true);
 
     glfwMakeContextCurrent(window);
-    
+
     // Focus the window
     glfwRequestWindowAttention(window);
-    
-    #if defined(__WIN64) || defined(__WIN32)
-    FreeConsole();
-    #endif
 
+#if defined(__WIN64) || defined(__WIN32)
+    FreeConsole();
+#endif
 
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK) {
@@ -187,6 +235,7 @@ int main(int argc, char** argv) {
 
     glfwSetFramebufferSizeCallback(window, glfw_resize_callback);
     glfwSetScrollCallback(window, glfw_scroll_callback);
+    glfwSetKeyCallback(window, glfw_key_callback);
 
     app_data.image_paths = list_images(filename);
 
@@ -197,7 +246,7 @@ int main(int argc, char** argv) {
 
     for (size_t i = 0; app_data.image_paths[i] != NULL; i++) {
         app_data.image_count++;
-        if(strcmp(app_data.image_paths[i], filename) == 0) {
+        if (strcmp(app_data.image_paths[i], filename) == 0) {
             app_data.image_index = i;
         }
     }
@@ -210,54 +259,6 @@ int main(int argc, char** argv) {
         glClear(GL_COLOR_BUFFER_BIT);
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-            glfwSetWindowShouldClose(window, GL_TRUE);
-        }
-
-        app_data.scale = 1.0f;
-        // Zoom
-        if ((glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) || app_data.scroll == 1) {
-            zoom_(ZOOM_IN, &app_data);
-        }
-
-        if ((glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) || app_data.scroll == -1) {
-            zoom_(ZOOM_OUT, &app_data);
-        }
-        // Move
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-            move(RIGHT, &app_data);
-        }
-
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-            move(LEFT, &app_data);
-        }
-
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-            move(UP, &app_data);
-        }
-
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-            move(DOWN, &app_data);
-        }
-
-        // Fullscreen
-        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
-            fullscreen(&app_data, window, monitor);
-            usleep(100000);
-        }
-
-        // Next image
-        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-            switch_image(NEXT, &app_data, window);
-            usleep(100000);
-        }
-
-        // Previous image
-        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-            switch_image(PREVIOUS, &app_data, window);
-            usleep(100000);
-        }
 
         app_data.scroll = 0;
 

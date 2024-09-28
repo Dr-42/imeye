@@ -1,5 +1,6 @@
 [build]
 compiler = "clang"
+cstandard = "gnu11"
 
 [[targets]]
 name = "imeye"
@@ -7,5 +8,5 @@ src = "./src/"
 include_dir = "./src/include/"
 type = "exe"
 cflags = " -g -Wall -Wextra"
-libs = "-lm -lGLEW -lglfw -lGL"
+libs = "-lc -lm -lGLEW -lglfw -lGL"
 deps = [""]
