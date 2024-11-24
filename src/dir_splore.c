@@ -28,6 +28,26 @@ char* parent_directory(const char* filepath) {
 	return parent;
 }
 
+int compare_strings(const void* a, const void* b) {
+	//int result = strcmp(*(char**)a, *(char**)b);
+	// Compare sparing the extension
+	char* a_copy = strdup(*(char**)a);
+	char* b_copy = strdup(*(char**)b);
+
+	size_t a_len = strlen(a_copy);
+	size_t b_len = strlen(b_copy);
+
+	if (a_len > 4 && b_len > 4) {
+		a_copy[a_len - 4] = '\0';
+		b_copy[b_len - 4] = '\0';
+	}
+
+	int result = strcmp(a_copy, b_copy);
+	free(a_copy);
+	free(b_copy);
+	return result;
+}
+
 char** list_images(const char* filepath) {
 	char* directory = parent_directory(filepath);
 	DIR* dir = opendir(directory);
@@ -74,5 +94,8 @@ char** list_images(const char* filepath) {
 
 	closedir(dir);
 	free(directory);
+
+	// Sort the images alphabetically
+	qsort(images, i, sizeof(char*), compare_strings);
 	return images;
 }
