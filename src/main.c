@@ -31,6 +31,16 @@ unsigned int indices[6] = {0, 3, 1, 1, 3, 2};
 app_data_t app_data = {0};
 GLFWmonitor* monitor = NULL;
 
+typedef struct display_scale_t {
+    float x_scale;
+    float y_scale;
+} display_scale_t;
+
+display_scale_t display_scale = (display_scale_t){
+    .x_scale = 1.0f,
+    .y_scale = 1.0f
+};
+
 void glfw_resize_callback(GLFWwindow* window, int width, int height) {
     (void)window;
     // Maintain the original size.
@@ -132,6 +142,7 @@ int main(int argc, char** argv) {
 
     int32_t display_width = 0, display_height = 0;
     monitor = glfwGetPrimaryMonitor();
+
     if (monitor) {
         const GLFWvidmode* mode = glfwGetVideoMode(monitor);
         if (mode) {
@@ -167,9 +178,18 @@ int main(int argc, char** argv) {
     app_data.title = malloc(sizeof(char) * (strlen(filename) + sizeof("imeye - ")));
     sprintf(app_data.title, "imeye - %s", filename);
     GLFWwindow* window = glfwCreateWindow(app_data.im_width, app_data.im_height, app_data.title, NULL, NULL);
+
     if (!window) {
         glfwTerminate();
         return -1;
+    }
+
+    glfwGetWindowContentScale(window, &display_scale.x_scale, &display_scale.y_scale);
+
+    printf("Display scale: %f, %f\n", display_scale.x_scale, display_scale.y_scale);
+
+    if (display_scale.x_scale != 1.0f || display_scale.y_scale != 1.0f) {
+        glfwSetWindowSize(window, app_data.im_width / display_scale.x_scale, app_data.im_height / display_scale.y_scale);
     }
 
     stbi_set_flip_vertically_on_load(false);
@@ -194,6 +214,8 @@ int main(int argc, char** argv) {
     if (glewInit() != GLEW_OK) {
         return -1;
     }
+
+    glViewport(0, 0, app_data.im_width, app_data.im_height);
 
     GLuint vao;
     glGenVertexArrays(1, &vao);
