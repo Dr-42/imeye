@@ -7,6 +7,6 @@ name = "imeye"
 src = "./src/"
 include_dir = "./src/include/"
 type = "exe"
-cflags = " -g -Wall -Wextra"
+cflags = " -O3 -Wall -Wextra"
 libs = "-lc -lm -lGLEW -lglfw -lGL"
 deps = [""]
