@@ -15,7 +15,6 @@ OBJ_FILES := $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRC_FILES))
 HEADER_FILES := $(wildcard $(INC_DIR)/*.h)
 
 # Compiler and Flags
-CC := clang
 CFLAGS := -Wall -Wextra -I$(INC_DIR)
 LDFLAGS := -lm -lGLEW -lglfw -lGL
 

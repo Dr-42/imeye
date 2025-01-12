@@ -1,5 +1,5 @@
 [build]
-compiler = "clang"
+compiler = "gcc"
 cstandard = "gnu11"
 
 [[targets]]
