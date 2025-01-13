@@ -70,7 +70,7 @@ char** list_images(const char* filepath) {
 				strcmp(name + len - 4, ".PNG") == 0 ||
 				strcmp(name + len - 4, ".JPG") == 0 ||
 				strcmp(name + len - 5, ".JPEG") == 0 ||
-				strcmp(name + len - 4, ".BMP") == 0 ||
+				strcmp(name + len - 4, ".BMP") == 0) {
 				images[i] = malloc(strlen(directory) + strlen(name) + 2);
 				strcpy(images[i], directory);
 				#if defined(_WIN32) || defined(_WIN64)
