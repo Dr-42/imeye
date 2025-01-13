@@ -29,8 +29,6 @@ char* parent_directory(const char* filepath) {
 }
 
 int compare_strings(const void* a, const void* b) {
-	//int result = strcmp(*(char**)a, *(char**)b);
-	// Compare sparing the extension
 	char* a_copy = strdup(*(char**)a);
 	char* b_copy = strdup(*(char**)b);
 
@@ -77,8 +75,7 @@ char** list_images(const char* filepath) {
 				strcmp(name + len - 5, ".JPEG") == 0 ||
 				strcmp(name + len - 4, ".BMP") == 0 ||
 				strcmp(name + len - 4, ".GIF") == 0 ||
-				strcmp(name + len - 4, ".TGA") == 0 ||
-				strcmp(name + len - 4, ".SVG") == 0) {
+				strcmp(name + len - 4, ".TGA") == 0) {
 				images[i] = malloc(strlen(directory) + strlen(name) + 2);
 				strcpy(images[i], directory);
 				#if defined(_WIN32) || defined(_WIN64)
