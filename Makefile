@@ -12,7 +12,7 @@ INC_DIR := $(SRC_DIR)/include
 # Source and Header Files
 SRC_FILES := $(wildcard $(SRC_DIR)/*.c)
 OBJ_FILES := $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRC_FILES))
-HEADER_FILES := $(wildcard $(INC_DIR)/*.h)
+DEP_FILES := $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.d, $(SRC_FILES))
 
 # Compiler and Flags
 CFLAGS := -Wall -Wextra -I$(INC_DIR)
@@ -27,8 +27,11 @@ $(BIN_DIR)/$(PROJECT_NAME): $(OBJ_FILES) | $(BIN_DIR)
 	$(CC) $(OBJ_FILES) -o $@ $(LDFLAGS)
 
 # Build Object Files
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(HEADER_FILES) | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
+
+# Include Dependency Files
+-include $(DEP_FILES)
 
 # Ensure Build Directories Exist
 $(OBJ_DIR):
