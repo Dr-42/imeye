@@ -61,6 +61,9 @@ void glfw_scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     }
 }
 
+#define MAX_KEYS 1024
+bool key_states[MAX_KEYS] = {0};
+
 void glfw_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     (void)window;
     (void)scancode;
@@ -70,29 +73,12 @@ void glfw_key_callback(GLFWwindow* window, int key, int scancode, int action, in
     }
 
     app_data.scale = 1.0f;
-    // Zoom
-    if ((key == GLFW_KEY_UP && action == GLFW_PRESS) || app_data.scroll == 1) {
-        zoom_(ZOOM_IN, &app_data);
-    }
-
-    if ((key == GLFW_KEY_DOWN && action == GLFW_PRESS) || app_data.scroll == -1) {
-        zoom_(ZOOM_OUT, &app_data);
-    }
-    // Move
-    if (key == GLFW_KEY_D && action == GLFW_PRESS) {
-        move(RIGHT, &app_data);
-    }
-
-    if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-        move(LEFT, &app_data);
-    }
-
-    if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-        move(UP, &app_data);
-    }
-
-    if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-        move(DOWN, &app_data);
+    if (key >= 0 && key < MAX_KEYS) {
+        if (action == GLFW_PRESS) {
+            key_states[key] = true;
+        } else if (action == GLFW_RELEASE) {
+            key_states[key] = false;
+        }
     }
 
     // Fullscreen
@@ -281,6 +267,20 @@ int main(int argc, char** argv) {
         glClear(GL_COLOR_BUFFER_BIT);
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        if (key_states[GLFW_KEY_UP]) {
+            zoom_(ZOOM_IN, &app_data);
+        } else if (key_states[GLFW_KEY_DOWN]) {
+            zoom_(ZOOM_OUT, &app_data);
+        } else if (key_states[GLFW_KEY_D]) {
+            move(RIGHT, &app_data);
+        } else if (key_states[GLFW_KEY_A]) {
+            move(LEFT, &app_data);
+        } else if (key_states[GLFW_KEY_W]) {
+            move(UP, &app_data);
+        } else if (key_states[GLFW_KEY_S]) {
+            move(DOWN, &app_data);
+        }
 
         app_data.scroll = 0;
 
