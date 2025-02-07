@@ -31,11 +31,6 @@ unsigned int indices[6] = {0, 3, 1, 1, 3, 2};
 app_data_t app_data = {0};
 GLFWmonitor* monitor = NULL;
 
-typedef struct display_scale_t {
-    float x_scale;
-    float y_scale;
-} display_scale_t;
-
 display_scale_t display_scale = (display_scale_t){
     .x_scale = 1.0f,
     .y_scale = 1.0f
@@ -96,6 +91,12 @@ void glfw_key_callback(GLFWwindow* window, int key, int scancode, int action, in
     // Previous image
     if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) {
         switch_image(PREVIOUS, &app_data, window);
+        usleep(100000);
+    }
+
+    // Reset viewer
+    if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+        reset_viewer(&app_data);
         usleep(100000);
     }
 }
@@ -169,6 +170,8 @@ int main(int argc, char** argv) {
         glfwTerminate();
         return -1;
     }
+
+    app_data.window = window;
 
     glfwGetWindowContentScale(window, &display_scale.x_scale, &display_scale.y_scale);
 

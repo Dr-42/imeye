@@ -1,5 +1,6 @@
 #include "controls.h"
 
+#include <GLFW/glfw3.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,6 +8,8 @@
 #include <math.h>
 
 #include "image.h"
+
+#define MARGIN 100
 
 float get_scale(uint32_t prev_width, uint32_t prev_height, uint32_t width, uint32_t height);
 
@@ -104,4 +107,52 @@ float get_scale(uint32_t prev_width, uint32_t prev_height, uint32_t width, uint3
     float ar = (float)width * (float)height;
     float scale = sqrtf(prev_ar) / sqrtf(ar);
     return scale;
+}
+
+int reset_viewer(app_data_t *app_data) {
+    int32_t display_width = 0, display_height = 0;
+    app_data->monitor = glfwGetPrimaryMonitor();
+
+    if (app_data->monitor) {
+        const GLFWvidmode* mode = glfwGetVideoMode(app_data->monitor);
+        if (mode) {
+            display_width = mode->width - MARGIN;
+            display_height = mode->height - MARGIN;
+        }
+    } else {
+        fprintf(stderr, "Failed to get primary monitor\n");
+        return -1;
+    }
+
+    if (display_width == 0 || display_height == 0) {
+        fprintf(stderr, "Failed to get display size\n");
+        return -1;
+    }
+
+    // Scale the image to fit the display
+    float scale = 1.0f;
+
+    if (app_data->im_width > display_width) {
+        scale = (float)display_width / (float)app_data->im_width;
+    }
+
+    if (app_data->im_height > display_height) {
+        float height_scale = (float)display_height / (float)app_data->im_height;
+        if (height_scale < scale) {
+            scale = height_scale;
+        }
+    }
+
+    app_data->im_width *= scale;
+    app_data->im_height *= scale;
+    display_scale_t display_scale = { 1.0f, 1.0f };
+
+    glfwGetWindowContentScale(app_data->window, &display_scale.x_scale, &display_scale.y_scale);
+
+    printf("Display scale: %f, %f\n", display_scale.x_scale, display_scale.y_scale);
+
+    if (display_scale.x_scale != 1.0f || display_scale.y_scale != 1.0f) {
+        glfwSetWindowSize(app_data->window, app_data->im_width / display_scale.x_scale, app_data->im_height / display_scale.y_scale);
+    }
+    return 0;
 }

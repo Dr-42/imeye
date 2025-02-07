@@ -22,7 +22,14 @@ typedef enum control_t {
 	PREVIOUS
 } control_t;
 
+typedef struct display_scale_t {
+    float x_scale;
+    float y_scale;
+} display_scale_t;
+
 typedef struct app_data_t {
+    GLFWmonitor* monitor;
+    GLFWwindow* window;
     char* title;
     uint32_t texture;
     int32_t im_width;
@@ -41,4 +48,4 @@ void zoom_(zoom_t zoom, app_data_t* app_data);
 void move(direction_t direction, app_data_t* app_data);
 void fullscreen(app_data_t* app_data, GLFWwindow* window, GLFWmonitor* monitor);
 void switch_image(control_t control, app_data_t* app_data, GLFWwindow* window);
-
+int reset_viewer(app_data_t* app_data);
