@@ -11,6 +11,8 @@
 
 #define MARGIN 100
 
+#define SWAP(a, b) { int32_t temp = a; a = b; b = temp; }
+
 float get_scale(uint32_t prev_width, uint32_t prev_height, uint32_t width, uint32_t height);
 
 void zoom_(zoom_t zoom, app_data_t* app_data) {
@@ -65,6 +67,7 @@ void fullscreen(app_data_t* app_data, GLFWwindow* window, GLFWmonitor* monitor) 
 }
 
 void switch_image(control_t control, app_data_t* app_data, GLFWwindow* window) {
+    app_data->rotation = 0;
     if (app_data->image_count == 0 || app_data->image_count == 1) {
         return;
     }
@@ -155,4 +158,23 @@ int reset_viewer(app_data_t *app_data) {
         glfwSetWindowSize(app_data->window, app_data->im_width / display_scale.x_scale, app_data->im_height / display_scale.y_scale);
     }
     return 0;
+}
+
+void rotate(rotate_direction_t direction, app_data_t* app_data) {
+    switch (direction) {
+        case CLOCKWISE:
+            app_data->rotation -= 90;
+            break;
+        case ANTICLOCKWISE:
+            app_data->rotation += 90;
+            break;
+        default:
+            fprintf(stderr, "Invalid direction value\n");
+            exit(EXIT_FAILURE);
+    }
+    SWAP(app_data->im_width, app_data->im_height);
+    app_data->v_x = app_data->v_x - (app_data->im_width - app_data->im_height) / 2;
+    app_data->v_y = app_data->v_y - (app_data->im_height - app_data->im_width) / 2;
+    glViewport(app_data->v_x, app_data->v_y, app_data->im_width, app_data->im_height);
+    app_data->rotation %= 360;
 }

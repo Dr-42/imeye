@@ -99,6 +99,16 @@ void glfw_key_callback(GLFWwindow* window, int key, int scancode, int action, in
         reset_viewer(&app_data);
         usleep(100000);
     }
+
+    // Rotate
+    if (key_states[GLFW_KEY_E]) {
+        rotate(CLOCKWISE, &app_data);
+        usleep(100000);
+    }
+    if (key_states[GLFW_KEY_Q]) {
+        rotate(ANTICLOCKWISE, &app_data);
+        usleep(100000);
+    }
 }
 
 int main(int argc, char** argv) {
@@ -240,6 +250,8 @@ int main(int argc, char** argv) {
     GLint tex_uniform = glGetUniformLocation(shader_program, "image");
     glUniform1i(tex_uniform, 0);
 
+    GLint rotation_uniform = glGetUniformLocation(shader_program, "rotation_angle");
+
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
@@ -268,6 +280,8 @@ int main(int argc, char** argv) {
         glfwPollEvents();
 
         glClear(GL_COLOR_BUFFER_BIT);
+
+        glUniform1f(rotation_uniform, (float)app_data.rotation);
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
