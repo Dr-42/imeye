@@ -4,7 +4,8 @@
 #include <dirent.h>
 #include <stdio.h>
 
-char* images[1024];
+char** images = NULL;
+size_t images_capacity = 0;
 
 char* parent_directory(const char* filepath) {
 	size_t last_slash = 0;
@@ -56,6 +57,12 @@ char** list_images(const char* filepath) {
 
 	struct dirent* entry;
 	
+    // Initialize or reset images array
+    if (images == NULL) {
+        images_capacity = 1024;
+        images = malloc(sizeof(char*) * images_capacity);
+    }
+
 	size_t i = 0;
 	while ((entry = readdir(dir)) != NULL) {
 		const char* name = entry->d_name;
@@ -71,6 +78,18 @@ char** list_images(const char* filepath) {
 				strcmp(name + len - 4, ".JPG") == 0 ||
 				strcmp(name + len - 5, ".JPEG") == 0 ||
 				strcmp(name + len - 4, ".BMP") == 0) {
+				
+                if (i >= images_capacity) {
+                    images_capacity *= 2;
+                    char** new_images = realloc(images, sizeof(char*) * images_capacity);
+                    if (new_images == NULL) {
+                        fprintf(stderr, "Failed to reallocate memory for images\n");
+                        // Handle error appropriately, maybe break or return what we have
+                        break; 
+                    }
+                    images = new_images;
+                }
+
 				images[i] = malloc(strlen(directory) + strlen(name) + 2);
 				strcpy(images[i], directory);
 				#if defined(_WIN32) || defined(_WIN64)
@@ -83,6 +102,16 @@ char** list_images(const char* filepath) {
 			}
 		}
 	}
+    
+    // Add NULL terminator for the array
+    if (i >= images_capacity) {
+        images_capacity++;
+        char** new_images = realloc(images, sizeof(char*) * images_capacity);
+        if (new_images != NULL) {
+            images = new_images;
+        }
+    }
+    images[i] = NULL;
 
 	closedir(dir);
 	free(directory);
